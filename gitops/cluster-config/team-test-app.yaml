@@ -1,0 +1,63 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: test-postgres
+  namespace: dba-test  # Application lives in team namespace
+  labels:
+    app: postgres-clusters
+    team: test-team
+    environment: test
+    managed-by: dba-test
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Use team-specific project for RBAC isolation
+  project: team-test  # Isolated to dba-test namespace only
+  
+  source:
+    repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
+    targetRevision: main
+    path: gitops/apps/databases/overlays/test
+  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dba-test
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true  # Delete resources last to avoid orphaned pods
+      - RespectIgnoreDifferences=true
+      - ServerSideApply=true  # Use server-side apply for better conflict resolution
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  
+  # Ignore operator-managed fields to prevent OutOfSync states
+  ignoreDifferences:
+    - group: acid.zalan.do
+      kind: postgresql
+      jsonPointers:
+        - /status
+        - /metadata/annotations/force-reconcile
+        - /metadata/annotations/force-sync
+    # Ignore changes to Services (operator recreates with LoadBalancer IPs)
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /spec/clusterIP
+        - /spec/clusterIPs
+        - /status
+    # Ignore ConfigMap changes (Patroni updates these)
+    - group: ""
+      kind: ConfigMap
+      name: test-cluster-leader
+      jsonPointers:
+        - /metadata/annotations

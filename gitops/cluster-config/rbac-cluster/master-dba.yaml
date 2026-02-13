@@ -1,0 +1,16 @@
+---
+# ClusterRoleBinding for master DBA postgres management
+# Allows 'dba' user to manage PostgreSQL clusters in all dba-* namespaces
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dba-master-postgres-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: postgres-user-role
+subjects:
+  - kind: User
+    name: dba
+    apiGroup: rbac.authorization.k8s.io
+

@@ -1,0 +1,20 @@
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Backup files
+*.bak
+backup-*.sql
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+.cursor/
+
+# Test outputs
+test-results/

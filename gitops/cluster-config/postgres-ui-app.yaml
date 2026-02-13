@@ -1,0 +1,48 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgres-ui
+  namespace: openshift-gitops
+  labels:
+    app: postgres-ui
+    component: database-operator
+    managed-by: cluster-admin
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: cluster-infrastructure
+  
+  # Source - Helm chart from upstream + our values
+  sources:
+    # Helm chart from Zalando
+    - repoURL: https://opensource.zalando.com/postgres-operator/charts/postgres-operator-ui
+      chart: postgres-operator-ui
+      targetRevision: 1.15.1
+      helm:
+        releaseName: postgres-operator-ui
+        valueFiles:
+          - $values/gitops/cluster-config/postgres-ui/helm-values.yaml
+    
+    # Our custom values from git repo
+    - repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
+      targetRevision: main
+      ref: values
+  
+  # Destination
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: postgres-operator
+  
+  # Sync policy - automated for cluster-config
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false  # Namespace created by operator app
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 5s
+        maxDuration: 3m

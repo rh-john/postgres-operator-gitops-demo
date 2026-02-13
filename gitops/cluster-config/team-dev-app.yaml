@@ -1,0 +1,66 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dev-postgres
+  namespace: dba-dev  # Application lives in team namespace
+  labels:
+    app: postgres-clusters
+    team: dev-team
+    environment: dev
+    managed-by: dba-dev
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Use team-specific project for RBAC isolation
+  project: team-dev  # Isolated to dba-dev namespace only
+  
+  # Source - dev team's cluster definitions
+  source:
+    repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
+    targetRevision: main
+    path: gitops/apps/databases/overlays/dev
+  
+  # Destination - dev namespace only
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dba-dev
+  
+  # Sync policy - auto-sync for dev
+  syncPolicy:
+    automated:
+      prune: true      # Remove resources not in Git
+      selfHeal: true   # Auto-sync when drift detected
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true  # Delete resources last to avoid orphaned pods
+      - RespectIgnoreDifferences=true
+      - ServerSideApply=true  # Use server-side apply for better conflict resolution
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  
+  # Health assessment
+  ignoreDifferences:
+    - group: acid.zalan.do
+      kind: postgresql
+      jsonPointers:
+        - /status
+        - /metadata/annotations/force-reconcile
+        - /metadata/annotations/force-sync
+    # Ignore changes to Services (operator recreates with LoadBalancer IPs)
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /spec/clusterIP
+        - /spec/clusterIPs
+        - /status
+    # Ignore ConfigMap changes (Patroni updates these)
+    - group: ""
+      kind: ConfigMap
+      name: dev-cluster-leader
+      jsonPointers:
+        - /metadata/annotations

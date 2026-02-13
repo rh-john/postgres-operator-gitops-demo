@@ -1,0 +1,56 @@
+---
+# ClusterRole for monitoring PostgreSQL resources
+# Note: Standard Kubernetes resources (pods, services, configmaps, statefulsets, etc.)
+#       are already covered by the built-in 'view' ClusterRole.
+#       This role only adds PostgreSQL CRDs and pods/log subresource.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: postgres-monitor
+rules:
+  # PostgreSQL CRDs (not included in standard 'view' role)
+  - apiGroups:
+      - acid.zalan.do
+    resources:
+      - postgresqls
+      - operatorconfigurations
+    verbs:
+      - get
+      - list
+      - watch
+  
+  # Pod logs subresource (not always included in 'view' role)
+  - apiGroups:
+      - ""
+    resources:
+      - pods/log
+    verbs:
+      - get
+---
+# ClusterRoleBinding for general view access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: secops-postgres-monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: User
+    name: secops
+    apiGroup: rbac.authorization.k8s.io
+---
+# ClusterRoleBinding for PostgreSQL monitoring
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: secops-postgres-read
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: postgres-monitor
+subjects:
+  - kind: User
+    name: secops
+    apiGroup: rbac.authorization.k8s.io

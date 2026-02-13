@@ -1,0 +1,39 @@
+---
+# Dev team namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dba-dev
+  labels:
+    name: dba-dev
+    team: dev-team
+    environment: development
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# Test team namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dba-test
+  labels:
+    name: dba-test
+    team: test-team
+    environment: testing
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# Prod team namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dba-prod
+  labels:
+    name: dba-prod
+    team: prod-team
+    environment: production
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"

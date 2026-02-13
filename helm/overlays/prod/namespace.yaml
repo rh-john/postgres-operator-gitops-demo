@@ -1,0 +1,43 @@
+---
+# Namespace for dba-prod
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dba-prod
+  labels:
+    name: dba-prod
+    environment: production
+---
+# RoleBinding to grant dba-prod user access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: postgres-user-binding
+  namespace: dba-prod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: postgres-user-role
+subjects:
+  - kind: User
+    name: dba-prod
+    apiGroup: rbac.authorization.k8s.io
+  # Master DBA also gets full access
+  - kind: User
+    name: dba
+    apiGroup: rbac.authorization.k8s.io
+---
+# View RoleBinding for project visibility
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dba-prod-view
+  namespace: dba-prod
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: User
+    name: dba-prod
+    apiGroup: rbac.authorization.k8s.io

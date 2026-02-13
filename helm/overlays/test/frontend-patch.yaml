@@ -1,0 +1,22 @@
+---
+# Patch deployment to use test-specific DB credentials secret
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  template:
+    spec:
+      containers:
+        - name: frontend
+          env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: testuser.test-cluster.credentials.postgresql.acid.zalan.do
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: testuser.test-cluster.credentials.postgresql.acid.zalan.do
+                  key: password

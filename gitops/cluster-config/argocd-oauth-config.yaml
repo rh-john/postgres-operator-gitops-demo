@@ -1,0 +1,87 @@
+---
+# Configure ArgoCD to use OpenShift OAuth
+apiVersion: argoproj.io/v1beta1
+kind: ArgoCD
+metadata:
+  name: openshift-gitops
+  namespace: openshift-gitops
+spec:
+  # Allow ArgoCD to manage Applications in team namespaces
+  sourceNamespaces:
+    - dba-dev
+    - dba-test
+    - dba-prod
+  
+  # Application controller - poll git every 30s (default 3 minutes)
+  controller:
+    appSync: "30s"
+  
+  # Resource tracking
+  resourceTrackingMethod: "annotation+label"
+  
+  # Enable webhook server for instant Git sync
+  server:
+    route:
+      enabled: true
+  
+  # Disable built-in Dex, use OpenShift OAuth
+  sso:
+    provider: dex
+    dex:
+      openShiftOAuth: true
+      resources:
+        limits:
+          cpu: 500m
+          memory: 256Mi
+        requests:
+          cpu: 250m
+          memory: 128Mi
+  
+  # RBAC Configuration
+  rbac:
+    defaultPolicy: ''  # No default access
+    policy: |
+      # Cluster Admins - Full admin access (OpenShift cluster-admins group)
+      g, cluster-admins, role:admin
+      
+      # Master DBA - Full admin access to all projects
+      g, dba, role:admin
+      
+      # Dev DBA - access to dev-postgres app in dba-dev namespace
+      p, role:dba-dev, applications, get, */*, allow
+      p, role:dba-dev, applications, sync, team-dev/dev-postgres, allow
+      p, role:dba-dev, applications, update, team-dev/dev-postgres, allow
+      p, role:dba-dev, applications, delete, team-dev/dev-postgres, allow
+      p, role:dba-dev, projects, get, team-dev, allow
+      p, role:dba-dev, repositories, get, *, allow
+      p, role:dba-dev, clusters, get, *, allow
+      g, dba-dev, role:dba-dev
+      
+      # Test DBA - access to test-postgres app in dba-test namespace
+      p, role:dba-test, applications, get, */*, allow
+      p, role:dba-test, applications, sync, team-test/test-postgres, allow
+      p, role:dba-test, applications, update, team-test/test-postgres, allow
+      p, role:dba-test, applications, delete, team-test/test-postgres, allow
+      p, role:dba-test, projects, get, team-test, allow
+      p, role:dba-test, repositories, get, *, allow
+      p, role:dba-test, clusters, get, *, allow
+      g, dba-test, role:dba-test
+      
+      # Prod DBA - access to prod-postgres app in dba-prod namespace
+      p, role:dba-prod, applications, get, */*, allow
+      p, role:dba-prod, applications, sync, team-prod/prod-postgres, allow
+      p, role:dba-prod, applications, update, team-prod/prod-postgres, allow
+      p, role:dba-prod, applications, delete, team-prod/prod-postgres, allow
+      p, role:dba-prod, projects, get, team-prod, allow
+      p, role:dba-prod, repositories, get, *, allow
+      p, role:dba-prod, clusters, get, *, allow
+      g, dba-prod, role:dba-prod
+      
+      # SecOps - Read-only access to all projects
+      p, role:secops, applications, get, */*, allow
+      p, role:secops, projects, get, *, allow
+      p, role:secops, repositories, get, *, allow
+      p, role:secops, clusters, get, *, allow
+      g, secops, role:secops
+    
+    scopes: '[groups]'

@@ -1,0 +1,32 @@
+---
+# Role for managing ArgoCD Applications in team namespace
+# This allows DBA users to create/manage Application CRs in their own namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: argocd-application-manager
+  labels:
+    app: postgres-operator
+    managed-by: gitops
+rules:
+  # Manage Applications in this namespace
+  - apiGroups:
+      - argoproj.io
+    resources:
+      - applications
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - watch
+      - update
+      - patch
+  # Read AppProjects
+  - apiGroups:
+      - argoproj.io
+    resources:
+      - appprojects
+    verbs:
+      - get
+      - list

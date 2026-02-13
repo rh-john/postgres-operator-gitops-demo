@@ -1,0 +1,81 @@
+---
+# ClusterRole for PostgreSQL cluster management
+# Allows users to create, read, update, and delete PostgreSQL clusters
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: postgres-user-role
+  labels:
+    app: postgres-operator
+    managed-by: gitops
+rules:
+  # Manage PostgreSQL custom resources
+  - apiGroups:
+      - acid.zalan.do
+    resources:
+      - postgresqls
+      - postgresqls/status
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  
+  # Read OperatorConfiguration
+  - apiGroups:
+      - acid.zalan.do
+    resources:
+      - operatorconfigurations
+    verbs:
+      - get
+      - list
+      - watch
+  
+  # Manage secrets for database credentials
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  
+  # View services and pods
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - pods
+      - pods/log
+    verbs:
+      - get
+      - list
+      - watch
+  
+  # View statefulsets
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+    verbs:
+      - get
+      - list
+      - watch
+  
+  # View persistent volume claims
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - watch

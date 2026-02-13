@@ -1,0 +1,121 @@
+---
+# Default deny all ingress traffic
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+
+---
+# Allow PostgreSQL access from same namespace only
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-same-namespace
+spec:
+  podSelector:
+    matchLabels:
+      application: spilo
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow access from same namespace
+  - from:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432
+
+---
+# Allow PostgreSQL Operator to manage databases
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-operator
+spec:
+  podSelector:
+    matchLabels:
+      application: spilo
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow operator access
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: postgres-operator
+    ports:
+    - protocol: TCP
+      port: 5432
+    - protocol: TCP
+      port: 8008  # Patroni REST API
+
+---
+# Allow monitoring access (for metrics collection)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-monitoring
+spec:
+  podSelector:
+    matchLabels:
+      application: spilo
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow Prometheus/monitoring to scrape metrics
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          network.openshift.io/policy-group: monitoring
+    ports:
+    - protocol: TCP
+      port: 9187  # PostgreSQL exporter
+
+---
+# Allow OpenShift Router ingress to frontend app
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-frontend-ingress
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          network.openshift.io/policy-group: ingress
+    ports:
+    - protocol: TCP
+      port: 8080
+
+---
+# Allow intra-cluster communication (Patroni)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-patroni-cluster
+spec:
+  podSelector:
+    matchLabels:
+      application: spilo
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow Patroni pods to communicate with each other
+  - from:
+    - podSelector:
+        matchLabels:
+          application: spilo
+    ports:
+    - protocol: TCP
+      port: 8008  # Patroni REST API
+    - protocol: TCP
+      port: 5432  # PostgreSQL replication

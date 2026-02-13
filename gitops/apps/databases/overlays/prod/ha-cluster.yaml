@@ -1,0 +1,64 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: prod-cluster
+  namespace: dba-prod
+  labels:
+    environment: prod
+    owner: dba-prod
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"  # Create PostgreSQL cluster after RBAC
+spec:
+  # Team ID
+  teamId: "prod-team"
+  
+  # High availability: 1 master + 1 replica
+  numberOfInstances: 2
+  
+  # Users and databases (simplified - no preparedDatabases)
+  users:
+    produser:
+      - superuser
+      - createdb
+    readonly: []
+  
+  databases:
+    proddb: produser
+  
+  # PostgreSQL configuration for production
+  postgresql:
+    version: "16"
+    parameters:
+      # Production memory settings
+      shared_buffers: "1GB"
+      max_connections: "200"
+      work_mem: "16MB"
+      
+      # Logging
+      log_statement: "ddl"
+      log_min_duration_statement: "1000"
+  
+  # Volume configuration - production size
+  volume:
+    size: 50Gi
+  
+  # Production resource limits
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+  
+  # Pod annotations
+  podAnnotations:
+    environment: prod
+  
+  # Enable load balancers
+  enableMasterLoadBalancer: true
+  enableReplicaLoadBalancer: true
+  
+  # Network access (restrict in real production)
+  allowedSourceRanges:
+    - 0.0.0.0/0  # For demo - restrict to VPC in production

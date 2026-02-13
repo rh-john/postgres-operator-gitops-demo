@@ -1,0 +1,64 @@
+---
+# Role for master dba to manage ArgoCD Applications
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: argocd-app-manager-master
+  namespace: openshift-gitops
+rules:
+  # Allow create/delete without resourceNames (resources don't exist yet when creating)
+  - apiGroups:
+      - argoproj.io
+    resources:
+      - applications
+    verbs:
+      - create
+      - delete
+  # Allow update/patch/sync on specific team applications
+  - apiGroups:
+      - argoproj.io
+    resources:
+      - applications
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+    resourceNames:
+      - dev-postgres
+      - test-postgres
+      - prod-postgres
+  # Allow read access to all applications
+  - apiGroups:
+      - argoproj.io
+    resources:
+      - applications
+    verbs:
+      - get
+      - list
+      - watch
+  # Access to all projects
+  - apiGroups:
+      - argoproj.io
+    resources:
+      - appprojects
+    verbs:
+      - get
+      - list
+      - watch
+---
+# RoleBinding for master dba
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dba-master-argocd-app-manager
+  namespace: openshift-gitops
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: argocd-app-manager-master
+subjects:
+  - kind: User
+    name: dba
+    apiGroup: rbac.authorization.k8s.io

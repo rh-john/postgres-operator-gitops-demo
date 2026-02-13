@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster-config
+  namespace: openshift-gitops
+  labels:
+    app: cluster-config
+    managed-by: cluster-admin
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Project - cluster infrastructure
+  project: cluster-infrastructure
+  
+  # Source - uses Kustomize to manage all cluster-config applications
+  source:
+    repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
+    targetRevision: main
+    path: gitops/cluster-config
+  
+  # Destination
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openshift-gitops
+  
+  # Sync policy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

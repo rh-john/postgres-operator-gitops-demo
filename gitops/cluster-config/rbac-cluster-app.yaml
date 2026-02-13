@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: rbac-cluster
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/name: rbac-cluster
+    app.kubernetes.io/part-of: postgres-operator
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"  # Must sync before operator (SCC required)
+spec:
+  project: cluster-infrastructure
+  
+  source:
+    repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
+    targetRevision: main
+    path: gitops/cluster-config/rbac-cluster
+  
+  destination:
+    server: https://kubernetes.default.svc
+    # No specific namespace - ClusterRoleBindings are cluster-scoped
+  
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: true
+    syncOptions:
+      - CreateNamespace=false
+      - PrunePropagationPolicy=foreground
+      - RespectIgnoreDifferences=true
+      - SkipDryRunOnMissingResource=true  # Skip validation for missing namespaces
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  
+  # Ignore differences in annotations added by OpenShift
+  ignoreDifferences:
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      jsonPointers:
+        - /metadata/annotations
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+      jsonPointers:
+        - /metadata/annotations

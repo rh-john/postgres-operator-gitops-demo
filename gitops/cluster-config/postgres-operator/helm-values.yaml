@@ -1,0 +1,133 @@
+# Helm values for Zalando PostgreSQL Operator on OpenShift
+# Multi-tenant configuration with GitOps
+
+# Kubernetes-specific configuration
+configKubernetes:
+  # Enable OpenShift-specific features
+  enable_pod_antiaffinity: true
+  
+  # Enable cross-namespace secrets
+  enable_cross_namespace_secret: true
+  
+  # Enable pod disruption budget
+  enable_pod_disruption_budget: true
+  
+  # Storage resize mode for OpenShift
+  storage_resize_mode: "pvc"
+  
+  # Spilo security context (for PostgreSQL pods, not operator pod)
+  # These settings require Spilo >= 1.6-p3
+  spilo_privileged: false
+  spilo_allow_privilege_escalation: true  # Required for cron (backups/cert rotation)
+  
+  # Storage class - adjust based on your cluster
+  # storage_class: "gp3-csi"  # Uncomment and set your storage class
+  
+# Resource limits for the operator
+resources:
+  limits:
+    cpu: 500m
+    memory: 500Mi
+  requests:
+    cpu: 100m
+    memory: 250Mi
+
+# Service account configuration
+serviceAccount:
+  create: true
+  name: postgres-operator
+
+# RBAC configuration for multi-tenant setup
+rbac:
+  create: true
+  # Create ClusterRole/ClusterRoleBinding to watch all namespaces
+  createAggregateClusterRoles: false  # We'll create our own
+  
+  # OpenShift SCC configuration - grant anyuid to operator
+  # Note: This must be applied manually or via post-sync hook
+  # oc adm policy add-scc-to-user anyuid -z postgres-operator -n postgres-operator
+  #
+  # Note: postgres-pod ServiceAccounts are created by the operator in each
+  # database namespace. SCC permissions are granted via scc-rolebinding.yaml
+  
+  # CRITICAL: OpenShift requires ConfigMaps for Patroni DCS (leader election)
+  # The Helm chart's default postgres-pod role doesn't include ConfigMap permissions
+  # See: https://opensource.zalando.com/postgres-operator/docs/quickstart.html#manual-deployment-setup-on-openshift
+  # We need to add these permissions via podServiceAccountRoleBindingDefinition below
+
+# Security context for operator container
+# Note: Do NOT set seccompProfile here - the Helm chart generates a deprecated
+# alpha seccomp annotation that OpenShift SCC admission rejects.
+# The anyuid SCC handles security context appropriately.
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Operator configuration
+configGeneral:
+  # Docker image for PostgreSQL (Spilo)
+  docker_image: "ghcr.io/zalando/spilo-16:3.3-p3"
+  
+  # CRITICAL for OpenShift: Use ConfigMaps for Patroni DCS (leader election)
+  # When false (default), Patroni uses Endpoints which cause permission issues on OpenShift
+  # See: https://opensource.zalando.com/postgres-operator/docs/quickstart.html#manual-deployment-setup-on-openshift
+  kubernetes_use_configmaps: true
+  
+  # Enable teams API integration (optional)
+  enable_teams_api: false
+  
+  # Workers configuration
+  workers: 8
+  max_instances: -1
+  min_instances: -1
+  
+  # Resync period
+  resync_period: "30m"
+  repair_period: "5m"
+  
+  # CRD validation
+  enable_crd_validation: true
+
+# Debug configuration
+configDebug:
+  debug_logging: true
+  enable_database_access: true
+
+# Patroni configuration
+configPatroni:
+  enable_patroni_failsafe_mode: false  # Set to true for Patroni 3.0+ with DCS outage handling
+
+# PostgreSQL pod configuration
+configPostgresPodResources:
+  # Default resource requests for PostgreSQL pods
+  default_cpu_request: "100m"
+  default_memory_request: "100Mi"
+  default_cpu_limit: "1000m"
+  default_memory_limit: "500Mi"
+  
+  # Minimum resource requests
+  min_cpu_limit: "250m"
+  min_memory_limit: "250Mi"
+
+# Connection pooler configuration (optional)
+configConnectionPooler:
+  connection_pooler_image: "registry.opensource.zalan.do/acid/pgbouncer:master-32"
+  connection_pooler_default_cpu_request: "500m"
+  connection_pooler_default_memory_request: "100Mi"
+  connection_pooler_default_cpu_limit: "1"
+  connection_pooler_default_memory_limit: "100Mi"
+
+# Logical backup configuration (optional)
+configLogicalBackup:
+  # Set to true to enable logical backups
+  logical_backup_docker_image: "ghcr.io/zalando/postgres-operator/logical-backup:v1.15.1"
+
+# Additional labels
+podLabels:
+  managed-by: gitops
+
+# Annotations
+podAnnotations:
+  managed-by: gitops

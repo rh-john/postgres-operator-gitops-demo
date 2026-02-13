@@ -1,0 +1,42 @@
+---
+# Namespace for dba-test
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dba-test
+  labels:
+    name: dba-test
+---
+# RoleBinding to grant dba-test user access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: postgres-user-binding
+  namespace: dba-test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: postgres-user-role
+subjects:
+  - kind: User
+    name: dba-test
+    apiGroup: rbac.authorization.k8s.io
+  # Master DBA also gets full access
+  - kind: User
+    name: dba
+    apiGroup: rbac.authorization.k8s.io
+---
+# View RoleBinding for project visibility
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dba-test-view
+  namespace: dba-test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: User
+    name: dba-test
+    apiGroup: rbac.authorization.k8s.io

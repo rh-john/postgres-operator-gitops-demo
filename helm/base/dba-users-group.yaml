@@ -1,0 +1,36 @@
+---
+# Grant all DBAs cross-namespace read access via dba-users group
+# The namespace will be set by the overlay's kustomization.yaml
+# All group members automatically inherit these permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dba-users-view
+  labels:
+    app: postgres-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: view
+subjects:
+  - kind: Group
+    name: dba-users
+    apiGroup: rbac.authorization.k8s.io
+---
+# Grant all DBAs PostgreSQL read access via dba-users group
+# The namespace will be set by the overlay's kustomization.yaml
+# All group members automatically inherit these permissions
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dba-users-postgres-read
+  labels:
+    app: postgres-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: postgres-monitor
+subjects:
+  - kind: Group
+    name: dba-users
+    apiGroup: rbac.authorization.k8s.io

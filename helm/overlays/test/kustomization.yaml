@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: dba-test
+
+resources:
+  - namespace.yaml
+  - ../../base
+  - test-cluster.yaml
+  - ../../../frontend/base
+  - frontend.yaml
+
+patches:
+  - path: frontend-patch.yaml
+
+images:
+  - name: frontend:latest
+    newName: image-registry.openshift-image-registry.svc:5000/dba-test/frontend
+    newTag: latest
+
+commonAnnotations:
+  environment: test

@@ -1,0 +1,67 @@
+# Helm values for PostgreSQL Operator UI on OpenShift
+
+# Enable the UI
+enabled: true
+
+# Image configuration
+image:
+  registry: ghcr.io
+  repository: zalando/postgres-operator-ui
+  tag: v1.15.1
+  pullPolicy: IfNotPresent
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8081
+
+# Resources
+resources:
+  limits:
+    cpu: 200m
+    memory: 200Mi
+  requests:
+    cpu: 100m
+    memory: 100Mi
+
+# Replicas
+replicaCount: 1
+
+# Pod security context - adjusted for OpenShift
+podSecurityContext:
+  runAsNonRoot: true
+  # OpenShift assigns a random UID, so we don't set runAsUser
+
+# Security context for containers
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Environment variables - connect to operator
+envs:
+  # Operator API endpoint
+  operatorApiUrl: "http://postgres-operator:8080"
+  
+  # Operator cluster name label
+  operatorClusterNameLabel: "cluster-name"
+  
+  # Target namespace (watch all)
+  targetNamespace: "*"
+  
+  # Teams API (disabled)
+  teamsApiUrl: ""
+  
+  # RBAC (disabled for simplicity)
+  oauthTokenScope: ""
+
+# Additional labels
+podLabels:
+  app: postgres-ui
+  managed-by: gitops
+
+# Annotations
+podAnnotations:
+  managed-by: gitops

@@ -1,0 +1,66 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: dev-cluster
+  namespace: dba-dev
+  labels:
+    environment: dev
+    owner: dba-dev
+spec:
+  # Team ID
+  teamId: "dev-team"
+  
+  # Number of instances for development (minimal HA)
+  numberOfInstances: 2
+  
+  # Users and databases
+  users:
+    appuser:
+      - superuser
+      - createdb
+    readonly:
+      []
+  
+  databases:
+    appdb: appuser
+  
+  # PostgreSQL configuration
+  postgresql:
+    version: "16"
+    parameters:
+      # Development settings
+      shared_buffers: "256MB"
+      max_connections: "50"
+      work_mem: "4MB"
+      
+      # Logging
+      log_statement: "all"
+      log_duration: "on"
+      log_min_duration_statement: "100"
+  
+  # Volume configuration - smaller for dev
+  volume:
+    size: 5Gi
+  
+  # Resource limits - lower for dev
+  resources:
+    requests:
+      cpu: 100m
+      memory: 250Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  
+  # Enable master load balancer
+  enableMasterLoadBalancer: true
+  
+  # Enable replica load balancer
+  enableReplicaLoadBalancer: true
+  
+  # Pod annotations
+  podAnnotations:
+    environment: dev
+  
+  # Network access
+  allowedSourceRanges:
+    - 0.0.0.0/0  # Development - allow all

@@ -1,0 +1,15 @@
+---
+# ArgoCD ConfigMap - additional settings
+# NOTE: Polling interval (appSync) and resourceTrackingMethod are configured
+# via the ArgoCD CR (argocd-oauth-config.yaml), NOT here.
+# The OpenShift GitOps operator manages argocd-cm and will overwrite
+# settings made directly in this ConfigMap.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data: {}

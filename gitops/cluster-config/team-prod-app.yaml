@@ -1,0 +1,68 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prod-postgres
+  namespace: dba-prod  # Application lives in team namespace
+  labels:
+    app: postgres-clusters
+    team: prod-team
+    environment: prod
+    managed-by: dba-prod
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Use team-specific project for RBAC isolation
+  project: team-prod  # Isolated to dba-prod namespace, manual sync only
+  
+  # Source - prod team's cluster definitions
+  source:
+    repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
+    targetRevision: main
+    path: gitops/apps/databases/overlays/prod
+  
+  # Destination - prod namespace only
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dba-prod
+  
+  # Sync policy - MANUAL sync for production (requires approval)
+  syncPolicy:
+    # NO automated sync for production!
+    # Uncomment for demo only:
+    # automated:
+    #   prune: true
+    #   selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true  # Delete resources last to avoid orphaned pods
+      - RespectIgnoreDifferences=true
+      - ServerSideApply=true  # Use server-side apply for better conflict resolution
+    retry:
+      limit: 5  # Increased retries
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+  
+  # Ignore operator-managed fields to prevent OutOfSync states
+  ignoreDifferences:
+    - group: acid.zalan.do
+      kind: postgresql
+      jsonPointers:
+        - /status
+        - /metadata/annotations/force-reconcile
+        - /metadata/annotations/force-sync
+    # Ignore changes to Services (operator recreates with LoadBalancer IPs)
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /spec/clusterIP
+        - /spec/clusterIPs
+        - /status
+    # Ignore ConfigMap changes (Patroni updates these)
+    - group: ""
+      kind: ConfigMap
+      name: prod-cluster-leader
+      jsonPointers:
+        - /metadata/annotations

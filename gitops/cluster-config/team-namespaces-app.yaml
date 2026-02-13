@@ -1,0 +1,66 @@
+---
+# ArgoCD Application for team namespace management
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: team-namespaces
+  namespace: openshift-gitops
+  labels:
+    app.kubernetes.io/name: team-namespaces
+    app.kubernetes.io/part-of: postgres-operator
+    managed-by: cluster-admin
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"  # Deploy before other apps
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # Project - cluster infrastructure
+  project: cluster-infrastructure
+  
+  # Source - team namespace definitions
+  source:
+    repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
+    targetRevision: main
+    path: gitops/cluster-config/team-namespaces
+  
+  # Destination - cluster-scoped
+  destination:
+    server: https://kubernetes.default.svc
+  
+  # Ignore differences (OpenShift adds many labels/annotations)
+  ignoreDifferences:
+    - group: ""
+      kind: Namespace
+      jsonPointers:
+        - /metadata/annotations
+        - /metadata/labels/kubernetes.io~1metadata.name
+        - /metadata/labels/pod-security.kubernetes.io~1audit
+        - /metadata/labels/pod-security.kubernetes.io~1audit-version
+        - /metadata/labels/pod-security.kubernetes.io~1warn
+        - /metadata/labels/pod-security.kubernetes.io~1warn-version
+        - /status
+  
+  # Sync policy - auto-sync (prune disabled for namespaces)
+  syncPolicy:
+    automated:
+      prune: false  # Never prune namespaces
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=false  # We ARE the namespace creator
+      - PrunePropagationPolicy=foreground
+      - RespectIgnoreDifferences=true
+      - ApplyOutOfSyncOnly=true  # Only sync what's actually different
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  
+  # Info section
+  info:
+    - name: Purpose
+      value: Manages team namespace creation only (not namespace contents)
+    - name: Note
+      value: Resources inside namespaces are managed by team Applications (dev-postgres, test-postgres, prod-postgres)

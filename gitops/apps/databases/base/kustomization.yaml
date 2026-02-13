@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - networkpolicies.yaml
+  - scc-rolebinding.yaml
+  - dba-users-group.yaml
+  - application-manager-role.yaml
+
+# Note: We don't use commonLabels here because they get added to NetworkPolicy
+# podSelectors, which would not match the actual PostgreSQL pod labels created
+# by the operator. The operator sets labels like 'application: spilo' but not
+# 'app.kubernetes.io/managed-by: gitops'
+
+# Common annotations (safe to apply to metadata only)
+commonAnnotations:
+  managed-by: openshift-gitops

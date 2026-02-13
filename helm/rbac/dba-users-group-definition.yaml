@@ -1,0 +1,25 @@
+---
+# OpenShift Group for DBA users
+# This group provides centralized management of DBA user permissions
+# Members automatically inherit cross-namespace read access to all dba-* namespaces
+#
+# IMPORTANT: After applying this YAML, you must also run:
+#   oc adm groups add-users dba-users dba dba-dev dba-test dba-prod
+#
+# This command properly registers the users with OpenShift's internal group
+# membership system. Simply listing users in the YAML is not sufficient for
+# RBAC evaluation - OpenShift requires bidirectional linking between User and
+# Group resources.
+#
+# The setup-dba-rbac.sh script handles this automatically.
+apiVersion: user.openshift.io/v1
+kind: Group
+metadata:
+  name: dba-users
+  labels:
+    app: postgres-operator
+users:
+  - dba         # Master DBA (full access)
+  - dba-dev     # Dev environment DBA
+  - dba-test    # Test environment DBA
+  - dba-prod    # Production environment DBA

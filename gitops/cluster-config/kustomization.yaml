@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # ArgoCD Projects (RBAC isolation)
+  - argocd-projects.yaml
+  
+  # Team namespaces (must be created first)
+  - team-namespaces-app.yaml
+  
+  # Cluster infrastructure (cluster-admin)
+  - postgres-operator-app.yaml
+  - postgres-ui-app.yaml
+  - rbac-cluster-app.yaml
+  
+  # Note: Team database apps (team-dev-app.yaml, team-test-app.yaml, team-prod-app.yaml)
+  # are deployed by DBA users in Step 4, not by cluster-admin here
