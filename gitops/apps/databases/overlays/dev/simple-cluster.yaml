@@ -13,7 +13,7 @@ spec:
   teamId: "dev-team"
   
   # Number of instances for development (no HA - single instance)
-  numberOfInstances: 1
+  numberOfInstances: 2
   
   # Users and databases
   users:
