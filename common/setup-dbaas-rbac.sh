@@ -29,7 +29,7 @@ echo ""
 echo "Creating OpenShift User objects (required before first login)..."
 ALL_USERS="pg-dba pg-dba-dev pg-dba-test pg-dba-prod mongo-dba mongo-dba-dev mongo-dba-test mongo-dba-prod secops"
 for user in $ALL_USERS; do
-    oc create user "$user" --dry-run=client -o yaml | oc apply -f - &>/dev/null
+    oc create user "$user" 2>/dev/null || true
     echo "  → user object '$user' ensured"
 done
 

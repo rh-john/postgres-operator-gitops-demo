@@ -24,7 +24,7 @@ oc apply -f helm/rbac/secops.yaml
 echo ""
 echo "Creating OpenShift User objects (required before first login)..."
 for user in dba dba-dev dba-test dba-prod secops; do
-    oc create user "$user" --dry-run=client -o yaml | oc apply -f - &>/dev/null
+    oc create user "$user" 2>/dev/null || true
     echo "  → user object '$user' ensured"
 done
 
