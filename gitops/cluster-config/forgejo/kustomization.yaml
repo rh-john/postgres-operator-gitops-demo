@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Optional self-hosted Git server for a fully on-cluster GitOps story.
+# ArgoCD supports Forgejo natively (same Gitea wire protocol).
+# To enable: uncomment forgejo-app.yaml in gitops/cluster-config/kustomization.yaml
+
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - service.yaml
+  - route.yaml
+  - pvc.yaml
+
+commonLabels:
+  app.kubernetes.io/name: forgejo
+  app.kubernetes.io/managed-by: gitops

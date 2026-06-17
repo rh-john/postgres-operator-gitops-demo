@@ -1,0 +1,37 @@
+---
+# Crunchy PGO PostgresCluster – test (2 instances for HA testing)
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: pg-test
+  labels:
+    environment: test
+    managed-by: gitops
+spec:
+  postgresVersion: 16
+
+  instances:
+    - name: instance1
+      replicas: 2
+      dataVolumeClaimSpec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+
+  backups:
+    pgbackrest:
+      repos:
+        - name: repo1
+          volume:
+            volumeClaimSpec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 10Gi
+
+  proxy:
+    pgBouncer:
+      replicas: 1

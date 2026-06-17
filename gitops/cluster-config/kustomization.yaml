@@ -4,14 +4,26 @@ kind: Kustomization
 resources:
   # ArgoCD Projects (RBAC isolation)
   - argocd-projects.yaml
-  
-  # Team namespaces (must be created first)
+
+  # Team namespaces (sync wave -1, created before operators)
   - team-namespaces-app.yaml
-  
-  # Cluster infrastructure (cluster-admin)
-  - postgres-operator-app.yaml
-  - postgres-ui-app.yaml
+
+  # RBAC (sync wave -1)
   - rbac-cluster-app.yaml
-  
-  # Note: Team database apps (team-dev-app.yaml, team-test-app.yaml, team-prod-app.yaml)
-  # are deployed by DBA users in Step 4, not by cluster-admin here
+
+  # Database operators (sync wave 0)
+  - crunchy-operator-app.yaml
+  - percona-mongo-operator-app.yaml
+
+  # Optional: self-hosted Git server
+  # - forgejo-app.yaml
+
+  # Note: Team database instance apps below are deployed by DBA users,
+  # not bootstrapped by cluster-admin here. They are included for reference
+  # and can be uncommented to have the cluster-config App-of-Apps manage them.
+  # - team-pg-dev-app.yaml
+  # - team-pg-test-app.yaml
+  # - team-pg-prod-app.yaml
+  # - team-mongo-dev-app.yaml
+  # - team-mongo-test-app.yaml
+  # - team-mongo-prod-app.yaml

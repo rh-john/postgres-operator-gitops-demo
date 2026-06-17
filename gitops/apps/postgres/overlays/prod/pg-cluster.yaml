@@ -1,0 +1,51 @@
+---
+# Crunchy PGO PostgresCluster – prod (HA: 3 instances + dedicated backups)
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: pg-prod
+  labels:
+    environment: prod
+    managed-by: gitops
+spec:
+  postgresVersion: 16
+
+  instances:
+    - name: instance1
+      replicas: 3
+      dataVolumeClaimSpec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 50Gi
+      # Affinity: spread replicas across nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    postgres-operator.crunchydata.com/cluster: pg-prod
+
+  backups:
+    pgbackrest:
+      repos:
+        - name: repo1
+          schedules:
+            full: "0 1 * * 0"       # Weekly full backup (Sunday 01:00)
+            differential: "0 1 * * 1-6"  # Daily differential (Mon–Sat 01:00)
+          volume:
+            volumeClaimSpec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 100Gi
+
+  # HA pgBouncer pool
+  proxy:
+    pgBouncer:
+      replicas: 2

@@ -1,0 +1,46 @@
+# Optional: deploy Forgejo as a self-hosted Git server on OpenShift.
+# To activate: add "- forgejo-app.yaml" to gitops/cluster-config/kustomization.yaml
+# After Forgejo is running:
+#   1. Complete first-run setup at the Route URL
+#   2. Mirror this repo into Forgejo (or push directly)
+#   3. Add Forgejo as a repository in ArgoCD:
+#        argocd repo add https://<forgejo-route>/your-org/dbaas-demo \
+#          --username admin --password <token>
+#   4. Update targetRevision repo URLs in all Application manifests to point to Forgejo
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: forgejo
+  namespace: openshift-gitops
+  labels:
+    app: forgejo
+    component: git-server
+    managed-by: cluster-admin
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: cluster-infrastructure
+
+  source:
+    repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
+    targetRevision: feature/dbaas-operators
+    path: gitops/cluster-config/forgejo
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: forgejo
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

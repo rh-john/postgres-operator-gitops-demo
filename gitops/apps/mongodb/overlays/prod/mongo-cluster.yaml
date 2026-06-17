@@ -1,0 +1,49 @@
+---
+# Percona Server MongoDB – prod (3-node replica set + scheduled backups via PBM)
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: mongo-prod
+  labels:
+    environment: prod
+    managed-by: gitops
+spec:
+  crVersion: "1.17.0"
+  image: percona/percona-server-mongodb:7.0.8-5
+
+  replsets:
+    - name: rs0
+      size: 3
+
+      volumeSpec:
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 50Gi
+
+      # Spread replicas across nodes
+      affinity:
+        antiAffinityTopologyKey: kubernetes.io/hostname
+
+  # Percona Backup for MongoDB (PBM) – scheduled backups to PVC
+  backup:
+    enabled: true
+    image: percona/percona-backup-mongodb:2.4.1
+    storages:
+      pvc-backup:
+        type: filesystem
+        filesystem:
+          path: /backup
+    tasks:
+      - name: weekly-full
+        enabled: true
+        schedule: "0 1 * * 0"    # Sunday 01:00
+        storageName: pvc-backup
+        compressionType: gzip
+      - name: daily-incremental
+        enabled: true
+        schedule: "0 1 * * 1-6"  # Mon–Sat 01:00
+        storageName: pvc-backup
+        compressionType: gzip

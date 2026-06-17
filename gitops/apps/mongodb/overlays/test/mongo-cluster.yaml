@@ -1,0 +1,27 @@
+---
+# Percona Server MongoDB – test (3-node replica set for HA testing)
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: mongo-test
+  labels:
+    environment: test
+    managed-by: gitops
+spec:
+  crVersion: "1.17.0"
+  image: percona/percona-server-mongodb:7.0.8-5
+
+  replsets:
+    - name: rs0
+      size: 3
+
+      volumeSpec:
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+
+  backup:
+    enabled: false

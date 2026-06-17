@@ -1,20 +1,20 @@
 ---
-# ClusterRole for PostgreSQL cluster management
+# ClusterRole for PostgreSQL cluster management (Crunchy PGO)
 # Allows users to create, read, update, and delete PostgreSQL clusters
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: postgres-user-role
   labels:
-    app: postgres-operator
+    app: crunchy-postgres-operator
     managed-by: gitops
 rules:
-  # Manage PostgreSQL custom resources
+  # Manage Crunchy PGO PostgresCluster custom resources
   - apiGroups:
-      - acid.zalan.do
+      - postgres-operator.crunchydata.com
     resources:
-      - postgresqls
-      - postgresqls/status
+      - postgresclusters
+      - postgresclusters/status
     verbs:
       - create
       - delete
@@ -23,12 +23,13 @@ rules:
       - patch
       - update
       - watch
-  
-  # Read OperatorConfiguration
+
+  # Read PGO OperatorConfiguration
   - apiGroups:
-      - acid.zalan.do
+      - postgres-operator.crunchydata.com
     resources:
-      - operatorconfigurations
+      - pgupgrades
+      - crunchybridgeclusters
     verbs:
       - get
       - list

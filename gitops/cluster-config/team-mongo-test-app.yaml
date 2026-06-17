@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: test-mongodb
+  namespace: openshift-gitops
+  labels:
+    app: mongodb-clusters
+    team: test-team
+    environment: test
+    managed-by: gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: team-mongodb
+
+  source:
+    repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
+    targetRevision: feature/dbaas-operators
+    path: gitops/apps/mongodb/overlays/test
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mongo-test
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  ignoreDifferences:
+    - group: psmdb.percona.com
+      kind: PerconaServerMongoDB
+      jsonPointers:
+        - /status
+    - group: ""
+      kind: Service
+      jsonPointers:
+        - /spec/clusterIP
+        - /spec/clusterIPs
+        - /status

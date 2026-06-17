@@ -1,0 +1,32 @@
+---
+# Allow intra-namespace traffic (cluster members + operator)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-same-namespace
+  labels:
+    managed-by: gitops
+spec:
+  podSelector: {}
+  ingress:
+    - from:
+        - podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# Allow the Crunchy PGO operator (postgres-operator ns) to reach cluster pods
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgres-operator
+  labels:
+    managed-by: gitops
+spec:
+  podSelector: {}
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: postgres-operator
+  policyTypes:
+    - Ingress

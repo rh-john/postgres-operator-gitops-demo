@@ -1,0 +1,92 @@
+---
+# ClusterRole for MongoDB cluster management (Percona Operator for MongoDB)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: mongo-user-role
+  labels:
+    app: percona-mongodb-operator
+    managed-by: gitops
+rules:
+  # Manage Percona PerconaServerMongoDB custom resources
+  - apiGroups:
+      - psmdb.percona.com
+    resources:
+      - perconaservermongodbs
+      - perconaservermongodbs/status
+      - perconaservermongodbbackups
+      - perconaservermongodbbackups/status
+      - perconaservermongodbrestores
+      - perconaservermongodbrestores/status
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+
+  # Manage secrets for database credentials
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+
+  # View services, pods, and logs
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - pods
+      - pods/log
+    verbs:
+      - get
+      - list
+      - watch
+
+  # View statefulsets
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+    verbs:
+      - get
+      - list
+      - watch
+
+  # View persistent volume claims
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - watch
+
+---
+# ClusterRoleBinding – master DBA gets mongo-user-role cluster-wide
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dba-master-mongo-user
+  labels:
+    app: percona-mongodb-operator
+    managed-by: gitops
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: mongo-user-role
+subjects:
+  - kind: User
+    name: mongo-dba
+    apiGroup: rbac.authorization.k8s.io

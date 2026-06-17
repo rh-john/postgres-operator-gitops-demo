@@ -1,39 +1,84 @@
 ---
-# Dev team namespace
+# PostgreSQL – dev namespace
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: dba-dev
+  name: pg-dev
   labels:
-    name: dba-dev
+    name: pg-dev
     team: dev-team
     environment: development
+    database: postgresql
     managed-by: gitops
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 ---
-# Test team namespace
+# PostgreSQL – test namespace
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: dba-test
+  name: pg-test
   labels:
-    name: dba-test
+    name: pg-test
     team: test-team
     environment: testing
+    database: postgresql
     managed-by: gitops
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 ---
-# Prod team namespace
+# PostgreSQL – prod namespace
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: dba-prod
+  name: pg-prod
   labels:
-    name: dba-prod
+    name: pg-prod
     team: prod-team
     environment: production
+    database: postgresql
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# MongoDB – dev namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mongo-dev
+  labels:
+    name: mongo-dev
+    team: dev-team
+    environment: development
+    database: mongodb
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# MongoDB – test namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mongo-test
+  labels:
+    name: mongo-test
+    team: test-team
+    environment: testing
+    database: mongodb
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# MongoDB – prod namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mongo-prod
+  labels:
+    name: mongo-prod
+    team: prod-team
+    environment: production
+    database: mongodb
     managed-by: gitops
   annotations:
     argocd.argoproj.io/sync-wave: "0"

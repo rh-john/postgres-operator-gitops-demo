@@ -6,24 +6,24 @@ metadata:
   name: cluster-infrastructure
   namespace: openshift-gitops
 spec:
-  description: Cluster-wide infrastructure components (operators, RBAC, monitoring)
-  
-  # Source repositories
+  description: Cluster-wide infrastructure (operators, RBAC, monitoring)
+
   sourceRepos:
     - https://github.com/rh-john/postgres-operator-gitops-demo
-    - https://opensource.zalando.com/postgres-operator/charts/postgres-operator
-    - https://opensource.zalando.com/postgres-operator/charts/postgres-operator-ui
-  
-  # Allowed destinations - cluster-wide namespaces only
+    # If using Forgejo, add your Forgejo repo URL here instead / in addition
+
   destinations:
     - namespace: postgres-operator
       server: https://kubernetes.default.svc
+    - namespace: mongodb-operator
+      server: https://kubernetes.default.svc
     - namespace: openshift-gitops
       server: https://kubernetes.default.svc
-    - namespace: '*'  # Allow cluster-scoped resources (ClusterRoles, etc)
+    - namespace: forgejo
       server: https://kubernetes.default.svc
-  
-  # Cluster resource allow list (can create cluster-scoped resources)
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+
   clusterResourceWhitelist:
     - group: ''
       kind: Namespace
@@ -31,6 +31,10 @@ spec:
       kind: ClusterRole
     - group: 'rbac.authorization.k8s.io'
       kind: ClusterRoleBinding
+    - group: 'operators.coreos.com'
+      kind: OperatorGroup
+    - group: 'operators.coreos.com'
+      kind: Subscription
     - group: 'apiextensions.k8s.io'
       kind: CustomResourceDefinition
     - group: 'admissionregistration.k8s.io'
@@ -41,100 +45,36 @@ spec:
       kind: PriorityClass
     - group: 'user.openshift.io'
       kind: Group
-  
-  # Namespace resource allow list
+
   namespaceResourceWhitelist:
     - group: '*'
       kind: '*'
-  
-  # Orphaned resources - ignore warnings (infrastructure components manage many resources)
+
   orphanedResources:
     warn: false
 
 ---
-# Project for database teams (DBA users)
+# Project for PostgreSQL DBA teams (Crunchy PGO)
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: postgres-databases
+  name: team-postgres
   namespace: openshift-gitops
 spec:
-  description: PostgreSQL database clusters for development teams
-  
-  # Source repositories
-  sourceRepos:
-    - https://github.com/rh-john/postgres-operator-gitops-demo
-  
-  # Allowed destinations - only dba-* namespaces
-  destinations:
-    - namespace: 'dba-*'
-      server: https://kubernetes.default.svc
-  
-  # No cluster resources allowed (namespace-scoped only)
-  clusterResourceBlacklist:
-    - group: '*'
-      kind: '*'
-  
-  # Namespace resource allow list
-  namespaceResourceWhitelist:
-    - group: ''
-      kind: Namespace
-    - group: ''
-      kind: ConfigMap
-    - group: ''
-      kind: Secret
-    - group: ''
-      kind: Service
-    - group: ''
-      kind: ServiceAccount
-    - group: ''
-      kind: PersistentVolumeClaim
-    - group: 'apps'
-      kind: StatefulSet
-    - group: 'rbac.authorization.k8s.io'
-      kind: Role
-    - group: 'rbac.authorization.k8s.io'
-      kind: RoleBinding
-    - group: 'acid.zalan.do'
-      kind: postgresql
-    - group: 'policy'
-      kind: PodDisruptionBudget
-    - group: 'networking.k8s.io'
-      kind: NetworkPolicy
-  
-  # Orphaned resources - warn but keep (operator lifecycle)
-  orphanedResources:
-    warn: true
+  description: PostgreSQL clusters (Crunchy PGO) for dev/test/prod
 
----
-# Project for dev team (databases + frontend app)
-apiVersion: argoproj.io/v1alpha1
-kind: AppProject
-metadata:
-  name: team-dev
-  namespace: openshift-gitops
-spec:
-  description: Dev team PostgreSQL databases and frontend application
-  
-  # Allow Applications from team namespace
-  sourceNamespaces:
-    - dba-dev
-  
   sourceRepos:
     - https://github.com/rh-john/postgres-operator-gitops-demo
-  
-  # Dev namespace only
+
   destinations:
-    - namespace: dba-dev
+    - namespace: 'pg-*'
       server: https://kubernetes.default.svc
-  
+
   clusterResourceBlacklist:
     - group: '*'
       kind: '*'
-  
+
   namespaceResourceWhitelist:
-    - group: ''
-      kind: Namespace
     - group: ''
       kind: ConfigMap
     - group: ''
@@ -153,50 +93,38 @@ spec:
       kind: Role
     - group: 'rbac.authorization.k8s.io'
       kind: RoleBinding
-    - group: 'acid.zalan.do'
-      kind: postgresql
+    - group: 'postgres-operator.crunchydata.com'
+      kind: PostgresCluster
     - group: 'policy'
       kind: PodDisruptionBudget
     - group: 'networking.k8s.io'
       kind: NetworkPolicy
-    - group: 'route.openshift.io'
-      kind: Route
-    - group: 'build.openshift.io'
-      kind: BuildConfig
-    - group: 'image.openshift.io'
-      kind: ImageStream
-  
+
   orphanedResources:
     warn: true
 
 ---
-# Project for test team (databases + frontend app)
+# Project for MongoDB DBA teams (Percona Operator)
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
-  name: team-test
+  name: team-mongodb
   namespace: openshift-gitops
 spec:
-  description: Test team PostgreSQL databases and frontend application
-  
-  # Allow Applications from team namespace
-  sourceNamespaces:
-    - dba-test
-  
+  description: MongoDB clusters (Percona Operator) for dev/test/prod
+
   sourceRepos:
     - https://github.com/rh-john/postgres-operator-gitops-demo
-  
+
   destinations:
-    - namespace: dba-test
+    - namespace: 'mongo-*'
       server: https://kubernetes.default.svc
-  
+
   clusterResourceBlacklist:
     - group: '*'
       kind: '*'
-  
+
   namespaceResourceWhitelist:
-    - group: ''
-      kind: Namespace
     - group: ''
       kind: ConfigMap
     - group: ''
@@ -209,86 +137,20 @@ spec:
       kind: PersistentVolumeClaim
     - group: 'apps'
       kind: StatefulSet
-    - group: 'apps'
-      kind: Deployment
     - group: 'rbac.authorization.k8s.io'
       kind: Role
     - group: 'rbac.authorization.k8s.io'
       kind: RoleBinding
-    - group: 'acid.zalan.do'
-      kind: postgresql
+    - group: 'psmdb.percona.com'
+      kind: PerconaServerMongoDB
+    - group: 'psmdb.percona.com'
+      kind: PerconaServerMongoDBBackup
+    - group: 'psmdb.percona.com'
+      kind: PerconaServerMongoDBRestore
     - group: 'policy'
       kind: PodDisruptionBudget
     - group: 'networking.k8s.io'
       kind: NetworkPolicy
-    - group: 'route.openshift.io'
-      kind: Route
-    - group: 'build.openshift.io'
-      kind: BuildConfig
-    - group: 'image.openshift.io'
-      kind: ImageStream
-  
-  orphanedResources:
-    warn: true
 
----
-# Project for prod team (databases + frontend app) - manual sync only
-apiVersion: argoproj.io/v1alpha1
-kind: AppProject
-metadata:
-  name: team-prod
-  namespace: openshift-gitops
-spec:
-  description: Production team PostgreSQL databases and frontend application - manual sync only
-  
-  # Allow Applications from team namespace
-  sourceNamespaces:
-    - dba-prod
-  
-  sourceRepos:
-    - https://github.com/rh-john/postgres-operator-gitops-demo
-  
-  destinations:
-    - namespace: dba-prod
-      server: https://kubernetes.default.svc
-  
-  clusterResourceBlacklist:
-    - group: '*'
-      kind: '*'
-  
-  namespaceResourceWhitelist:
-    - group: ''
-      kind: Namespace
-    - group: ''
-      kind: ConfigMap
-    - group: ''
-      kind: Secret
-    - group: ''
-      kind: Service
-    - group: ''
-      kind: ServiceAccount
-    - group: ''
-      kind: PersistentVolumeClaim
-    - group: 'apps'
-      kind: StatefulSet
-    - group: 'apps'
-      kind: Deployment
-    - group: 'rbac.authorization.k8s.io'
-      kind: Role
-    - group: 'rbac.authorization.k8s.io'
-      kind: RoleBinding
-    - group: 'acid.zalan.do'
-      kind: postgresql
-    - group: 'policy'
-      kind: PodDisruptionBudget
-    - group: 'networking.k8s.io'
-      kind: NetworkPolicy
-    - group: 'route.openshift.io'
-      kind: Route
-    - group: 'build.openshift.io'
-      kind: BuildConfig
-    - group: 'image.openshift.io'
-      kind: ImageStream
-  
   orphanedResources:
     warn: true

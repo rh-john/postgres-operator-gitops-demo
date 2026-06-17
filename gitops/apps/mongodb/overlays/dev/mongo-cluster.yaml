@@ -1,0 +1,28 @@
+---
+# Percona Server MongoDB – dev (single-node replica set, minimal resources)
+apiVersion: psmdb.percona.com/v1
+kind: PerconaServerMongoDB
+metadata:
+  name: mongo-dev
+  labels:
+    environment: dev
+    managed-by: gitops
+spec:
+  crVersion: "1.17.0"
+  image: percona/percona-server-mongodb:7.0.8-5
+
+  replsets:
+    - name: rs0
+      size: 1   # Single node for dev – no HA overhead
+
+      volumeSpec:
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
+
+  # Disable backups for dev
+  backup:
+    enabled: false

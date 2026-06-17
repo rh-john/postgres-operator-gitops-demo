@@ -20,10 +20,16 @@ INFO="${CYAN}[INFO]${NC}"
 # ==============================================
 # CONFIGURATION
 # ==============================================
-DB_NAMESPACES="${DB_NAMESPACES:-dba-dev dba-test dba-prod}"
-OPERATOR_NAMESPACE="${OPERATOR_NAMESPACE:-postgres-operator}"
-ALL_NAMESPACES="$OPERATOR_NAMESPACE $DB_NAMESPACES"
+PG_NAMESPACES="${PG_NAMESPACES:-pg-dev pg-test pg-prod}"
+MONGO_NAMESPACES="${MONGO_NAMESPACES:-mongo-dev mongo-test mongo-prod}"
+PG_OPERATOR_NAMESPACE="${PG_OPERATOR_NAMESPACE:-postgres-operator}"
+MONGO_OPERATOR_NAMESPACE="${MONGO_OPERATOR_NAMESPACE:-mongodb-operator}"
+ALL_NAMESPACES="$PG_OPERATOR_NAMESPACE $MONGO_OPERATOR_NAMESPACE $PG_NAMESPACES $MONGO_NAMESPACES"
 DBA_PASSWORD="${DBA_PASSWORD:-redhat123}"
+
+# Keep legacy alias so any scripts that still reference DB_NAMESPACES don't break
+DB_NAMESPACES="${DB_NAMESPACES:-$PG_NAMESPACES}"
+OPERATOR_NAMESPACE="${OPERATOR_NAMESPACE:-$PG_OPERATOR_NAMESPACE}"
 
 # ArgoCD application names managed by this project
 ARGOCD_INFRA_APPS="postgres-operator postgres-ui rbac-cluster"

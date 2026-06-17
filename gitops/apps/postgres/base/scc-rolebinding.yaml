@@ -1,0 +1,18 @@
+---
+# Allow the Crunchy PGO service accounts to use the anyuid SCC
+# PGO manages its own service accounts per PostgresCluster instance
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: crunchy-postgres-scc
+  labels:
+    app: crunchy-postgres-operator
+    managed-by: gitops
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:anyuid
+subjects:
+  - kind: ServiceAccount
+    name: postgres-operator
+    namespace: postgres-operator

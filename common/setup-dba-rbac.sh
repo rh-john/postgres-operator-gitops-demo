@@ -7,8 +7,12 @@ source "${SCRIPT_DIR}/functions.sh"
 
 banner "Setting up ALL DBA RBAC"
 
-# Create OpenShift users before applying RBAC so they exist in the cluster
-create_openshift_users "dba dba-dev dba-test dba-prod" "$DBA_PASSWORD"
+# Create PostgreSQL DBA users
+create_openshift_users "pg-dba pg-dba-dev pg-dba-test pg-dba-prod" "$DBA_PASSWORD"
+echo ""
+
+# Create MongoDB DBA users
+create_openshift_users "mongo-dba mongo-dba-dev mongo-dba-test mongo-dba-prod" "$DBA_PASSWORD"
 echo ""
 
 # Apply cluster-level RBAC manifests
@@ -22,18 +26,25 @@ oc apply -f helm/rbac/master-dba-ui-access.yaml        # UI port-forward access
 oc apply -f helm/rbac/secops.yaml
 
 echo ""
-echo "Ensuring users are properly registered in dba-users group..."
-oc adm groups add-users dba-users dba dba-dev dba-test dba-prod 2>/dev/null || true
+echo "Registering users in groups..."
+oc adm groups add-users pg-dba-users    pg-dba pg-dba-dev pg-dba-test pg-dba-prod 2>/dev/null || true
+oc adm groups add-users mongo-dba-users mongo-dba mongo-dba-dev mongo-dba-test mongo-dba-prod 2>/dev/null || true
 
 success ""
 success "✓ All RBAC configured"
 echo ""
-echo "Group created:"
-echo "  - dba-users (group): Contains dba, dba-dev, dba-test, dba-prod"
+echo "PostgreSQL DBA users (Crunchy PGO):"
+echo "  - pg-dba (master): Full access to all pg-* namespaces"
+echo "  - pg-dba-dev: Write to pg-dev"
+echo "  - pg-dba-test: Write to pg-test"
+echo "  - pg-dba-prod: Write to pg-prod"
 echo ""
-echo "Users configured:"
-echo "  - dba (master): Full access to all namespaces + UI port-forward"
-echo "  - dba-dev: Write to dba-dev, read all dba-* (via group)"
-echo "  - dba-test: Write to dba-test, read all dba-* (via group)"
-echo "  - dba-prod: Write to dba-prod, read all dba-* (via group)"
+echo "MongoDB DBA users (Percona Operator):"
+echo "  - mongo-dba (master): Full access to all mongo-* namespaces"
+echo "  - mongo-dba-dev: Write to mongo-dev"
+echo "  - mongo-dba-test: Write to mongo-test"
+echo "  - mongo-dba-prod: Write to mongo-prod"
+echo ""
 echo "  - secops: Read-only monitoring access (cluster-wide)"
+echo ""
+echo "Password for all users: ${DBA_PASSWORD}"
