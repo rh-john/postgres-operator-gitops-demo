@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dev-postgres
+  name: pg-dev
   namespace: openshift-gitops
   labels:
     app: postgres-clusters

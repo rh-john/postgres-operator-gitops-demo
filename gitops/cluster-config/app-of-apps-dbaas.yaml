@@ -1,0 +1,36 @@
+# DBaaS Demo – App-of-Apps bootstrap (Crunchy PGO + Percona MongoDB)
+#
+# Bootstrap with:
+#   oc apply -f gitops/cluster-config/app-of-apps-dbaas.yaml
+#
+# The original app-of-apps.yaml (Zalando demo) is untouched.
+# Both can run side-by-side on the same cluster.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster-config-dbaas
+  namespace: openshift-gitops
+  labels:
+    app: cluster-config-dbaas
+    demo: dbaas
+    managed-by: cluster-admin
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: cluster-infrastructure
+
+  source:
+    repoURL: https://github.com/john-johansson/postgres-operator-gitops-demo
+    targetRevision: feature/dbaas-operators
+    path: gitops/cluster-config/dbaas
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openshift-gitops
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

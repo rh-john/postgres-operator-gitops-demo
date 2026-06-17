@@ -1,12 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: prod-postgres
+  name: pg-test
   namespace: openshift-gitops
   labels:
     app: postgres-clusters
-    team: prod-team
-    environment: prod
+    team: test-team
+    environment: test
     managed-by: gitops
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -16,24 +16,26 @@ spec:
   source:
     repoURL: https://github.com/john-johansson/postgres-operator-gitops-demo
     targetRevision: feature/dbaas-operators
-    path: gitops/apps/postgres/overlays/prod
+    path: gitops/apps/postgres/overlays/test
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: pg-prod
+    namespace: pg-test
 
-  # Production: manual sync only
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=false
       - ServerSideApply=true
       - RespectIgnoreDifferences=true
     retry:
-      limit: 3
+      limit: 5
       backoff:
-        duration: 10s
+        duration: 5s
         factor: 2
-        maxDuration: 5m
+        maxDuration: 3m
 
   ignoreDifferences:
     - group: postgres-operator.crunchydata.com

@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# DBaaS demo ArgoCD applications.
+# This is the source for cluster-config-dbaas (app-of-apps-dbaas.yaml).
+# The original gitops/cluster-config/kustomization.yaml (Zalando demo) is untouched.
+
+resources:
+  # Cluster infrastructure operators (sync wave 0)
+  - crunchy-operator-app.yaml
+  - percona-mongo-operator-app.yaml
+
+  # Namespace management – pg-*/mongo-* (separate from old dba-*)
+  - dbaas-namespaces-app.yaml
+
+  # RBAC – Crunchy + Percona roles (separate from old rbac-cluster)
+  - dbaas-rbac-app.yaml
+
+  # Database instance applications (deployed by DBA users or uncomment to auto-deploy)
+  # - team-pg-dev-app.yaml
+  # - team-pg-test-app.yaml
+  # - team-pg-prod-app.yaml
+  # - team-mongo-dev-app.yaml
+  # - team-mongo-test-app.yaml
+  # - team-mongo-prod-app.yaml
+
+  # Optional: self-hosted Forgejo Git server
+  # - forgejo-app.yaml
+
+commonLabels:
+  demo: dbaas

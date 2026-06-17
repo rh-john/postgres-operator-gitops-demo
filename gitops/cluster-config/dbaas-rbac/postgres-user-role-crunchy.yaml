@@ -1,0 +1,68 @@
+---
+# ClusterRole for PostgreSQL cluster management – Crunchy PGO v5
+# Uses postgres-operator.crunchydata.com API group.
+# The original postgres-user-role (acid.zalan.do) is untouched in rbac-cluster/.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: postgres-user-role-crunchy
+  labels:
+    app: crunchy-postgres-operator
+    demo: dbaas
+    managed-by: gitops
+rules:
+  - apiGroups:
+      - postgres-operator.crunchydata.com
+    resources:
+      - postgresclusters
+      - postgresclusters/status
+      - pgupgrades
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+      - services
+      - pods
+      - pods/log
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - watch
+
+  - apiGroups:
+      - apps
+    resources:
+      - statefulsets
+      - deployments
+    verbs:
+      - get
+      - list
+      - watch
+
+---
+# ClusterRoleBinding – master PostgreSQL DBA (pg-dba)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: pg-dba-master-postgres-user
+  labels:
+    demo: dbaas
+    managed-by: gitops
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: postgres-user-role-crunchy
+subjects:
+  - kind: User
+    name: pg-dba
+    apiGroup: rbac.authorization.k8s.io

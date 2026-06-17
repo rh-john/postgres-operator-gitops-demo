@@ -1,0 +1,90 @@
+---
+# PostgreSQL – dev (Crunchy PGO)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pg-dev
+  labels:
+    name: pg-dev
+    team: dev-team
+    environment: development
+    database: postgresql
+    demo: dbaas
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# PostgreSQL – test (Crunchy PGO)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pg-test
+  labels:
+    name: pg-test
+    team: test-team
+    environment: testing
+    database: postgresql
+    demo: dbaas
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# PostgreSQL – prod (Crunchy PGO)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pg-prod
+  labels:
+    name: pg-prod
+    team: prod-team
+    environment: production
+    database: postgresql
+    demo: dbaas
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# MongoDB – dev (Percona Operator)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mongo-dev
+  labels:
+    name: mongo-dev
+    team: dev-team
+    environment: development
+    database: mongodb
+    demo: dbaas
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# MongoDB – test (Percona Operator)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mongo-test
+  labels:
+    name: mongo-test
+    team: test-team
+    environment: testing
+    database: mongodb
+    demo: dbaas
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+# MongoDB – prod (Percona Operator)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mongo-prod
+  labels:
+    name: mongo-prod
+    team: prod-team
+    environment: production
+    database: mongodb
+    demo: dbaas
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
