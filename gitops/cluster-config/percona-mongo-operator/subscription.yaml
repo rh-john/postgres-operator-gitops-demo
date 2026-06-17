@@ -28,8 +28,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
-  channel: stable-v1
-  name: percona-server-mongodb-operator
+  channel: stable
+  name: percona-server-mongodb-operator-certified
   source: certified-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
