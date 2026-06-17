@@ -408,17 +408,12 @@ create_openshift_users() {
         echo "  → user '$user' added/updated"
     done
 
-    # Create or replace the htpasswd secret
-    if oc get secret "$secret_name" -n "$secret_namespace" &>/dev/null; then
-        oc create secret generic "$secret_name" \
-            --from-file=htpasswd="$tmp_htpasswd" \
-            --dry-run=client -o yaml \
-            | oc replace -f -
-    else
-        oc create secret generic "$secret_name" \
-            --from-file=htpasswd="$tmp_htpasswd" \
-            -n "$secret_namespace"
-    fi
+    # Create or update the htpasswd secret (apply handles both cases)
+    oc create secret generic "$secret_name" \
+        --from-file=htpasswd="$tmp_htpasswd" \
+        -n "$secret_namespace" \
+        --dry-run=client -o yaml \
+        | oc apply -f -
 
     rm -f "$tmp_htpasswd"
 
