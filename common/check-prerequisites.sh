@@ -50,11 +50,27 @@ else
     MISSING+=("login")
 fi
 
-# Detect which demo is active based on deployed namespaces
+# Detect which demo is active.
+# Priority: 1) --dbaas / --zalando flag, 2) git branch, 3) deployed namespaces/apps
 DEMO_MODE="zalando"
-if oc get namespace pg-dev &>/dev/null 2>&1 || oc get namespace mongo-dev &>/dev/null 2>&1; then
-    DEMO_MODE="dbaas"
+for arg in "$@"; do
+    case $arg in
+        --dbaas)   DEMO_MODE="dbaas";    break ;;
+        --zalando) DEMO_MODE="zalando";  break ;;
+    esac
+done
+
+if [ "$DEMO_MODE" = "zalando" ]; then
+    GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    if [[ "$GIT_BRANCH" == *"dbaas"* ]] || [[ "$GIT_BRANCH" == *"operators"* ]]; then
+        DEMO_MODE="dbaas"
+    elif oc get namespace pg-dev &>/dev/null 2>&1 || \
+         oc get application cluster-config-dbaas -n openshift-gitops &>/dev/null 2>&1; then
+        DEMO_MODE="dbaas"
+    fi
 fi
+
+echo "Demo mode: $DEMO_MODE"
 
 # Check OpenShift users (if logged in)
 echo ""
