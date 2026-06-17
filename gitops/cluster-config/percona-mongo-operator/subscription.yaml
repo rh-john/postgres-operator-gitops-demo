@@ -9,7 +9,8 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 ---
-# OperatorGroup – watch all namespaces so one operator serves mongo-dev/test/prod
+# OperatorGroup – OwnNamespace mode (certified operator does not support AllNamespaces)
+# All MongoDB clusters are deployed into this same namespace.
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
@@ -17,7 +18,9 @@ metadata:
   namespace: mongodb-operator
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
-spec: {}  # Empty spec = AllNamespaces install mode
+spec:
+  targetNamespaces:
+    - mongodb-operator
 ---
 # OLM Subscription – installs Percona MongoDB Operator from certified-operators catalog
 apiVersion: operators.coreos.com/v1alpha1

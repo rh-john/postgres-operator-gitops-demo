@@ -7,8 +7,9 @@ kind: Kustomization
 
 resources:
   # Cluster infrastructure operators (sync wave 0)
+  # Crunchy PGO is installed cluster-wide (supports AllNamespaces).
+  # Percona MongoDB operator is deployed per-namespace inside each mongo-* app (OwnNamespace mode).
   - crunchy-operator-app.yaml
-  - percona-mongo-operator-app.yaml
 
   # Namespace management – pg-*/mongo-* (separate from old dba-*)
   - dbaas-namespaces-app.yaml

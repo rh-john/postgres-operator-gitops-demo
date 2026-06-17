@@ -12,6 +12,6 @@ roleRef:
   kind: ClusterRole
   name: system:openshift:scc:anyuid
 subjects:
+  # namespace is set by kustomize to the overlay namespace (mongo-dev / mongo-test / mongo-prod)
   - kind: ServiceAccount
     name: percona-server-mongodb-operator
-    namespace: mongodb-operator

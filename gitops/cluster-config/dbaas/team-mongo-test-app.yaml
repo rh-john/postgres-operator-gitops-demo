@@ -48,3 +48,11 @@ spec:
         - /spec/clusterIP
         - /spec/clusterIPs
         - /status
+    - group: operators.coreos.com
+      kind: OperatorGroup
+      jsonPointers:
+        - /status
+    - group: operators.coreos.com
+      kind: Subscription
+      jsonPointers:
+        - /status
