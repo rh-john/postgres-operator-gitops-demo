@@ -1,20 +1,23 @@
 ---
-# Namespace for the Percona MongoDB operator
+# Namespace that hosts the operator process (OwnNamespace OLM install mode)
 apiVersion: v1
 kind: Namespace
 metadata:
   name: mongodb-operator
   labels:
     managed-by: gitops
+    demo: dbaas
   annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+    argocd.argoproj.io/sync-wave: "-2"
 ---
-# OperatorGroup – OwnNamespace mode (certified operator does not support AllNamespaces)
-# All MongoDB clusters are deployed into this same namespace.
+# OperatorGroup in OwnNamespace mode — the only mode the certified catalog supports.
+# The operator binary is then configured via WATCH_NAMESPACE to also watch
+# mongo-dev / mongo-test / mongo-prod, giving us cluster-wide coverage without
+# needing the AllNamespaces OLM install mode.
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
-  name: percona-server-mongodb-operator
+  name: percona-mongodb-og
   namespace: mongodb-operator
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
@@ -22,7 +25,7 @@ spec:
   targetNamespaces:
     - mongodb-operator
 ---
-# OLM Subscription – installs Percona MongoDB Operator from certified-operators catalog
+# OLM Subscription — installs Percona MongoDB Operator from the certified catalog
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -36,3 +39,10 @@ spec:
   source: certified-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
+  config:
+    env:
+      # Cluster-wide mode: watch mongodb-operator plus all three team namespaces.
+      # OLM passes this env var into the operator Deployment at install time,
+      # so we never need to patch the Deployment manually after install.
+      - name: WATCH_NAMESPACE
+        value: "mongodb-operator,mongo-dev,mongo-test,mongo-prod"

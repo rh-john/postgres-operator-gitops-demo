@@ -7,9 +7,6 @@ resources:
   - ../../base
   - mongo-cluster.yaml
 
-patches:
-  - path: og-patch.yaml
-
 commonAnnotations:
   environment: dev
   managed-by: openshift-gitops

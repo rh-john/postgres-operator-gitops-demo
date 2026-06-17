@@ -1,0 +1,81 @@
+---
+# ClusterRole granting the Percona MongoDB operator full management of PSMDB
+# resources across all watched namespaces.
+# Required for cluster-wide mode (WATCH_NAMESPACE != operator namespace).
+# Based on the Percona upstream cw-bundle.yaml role definitions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: percona-server-mongodb-operator-cluster-wide
+  labels:
+    demo: dbaas
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+rules:
+  - apiGroups: ["psmdb.percona.com"]
+    resources:
+      - perconaservermongodbs
+      - perconaservermongodbs/status
+      - perconaservermongodbs/finalizers
+      - perconaservermongodbbackups
+      - perconaservermongodbbackups/status
+      - perconaservermongodbbackups/finalizers
+      - perconaservermongodbrestores
+      - perconaservermongodbrestores/status
+      - perconaservermongodbrestores/finalizers
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/exec
+      - services
+      - endpoints
+      - persistentvolumeclaims
+      - events
+      - configmaps
+      - secrets
+      - serviceaccounts
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - daemonsets
+      - replicasets
+      - statefulsets
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["certmanager.k8s.io", "cert-manager.io"]
+    resources: ["issuers", "certificates"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+---
+# ClusterRoleBinding — binds the operator's ServiceAccount (in mongodb-operator)
+# to the cluster-wide role so it can act in mongo-dev / mongo-test / mongo-prod.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: percona-server-mongodb-operator-cluster-wide
+  labels:
+    demo: dbaas
+    managed-by: gitops
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: percona-server-mongodb-operator-cluster-wide
+subjects:
+  - kind: ServiceAccount
+    name: percona-server-mongodb-operator
+    namespace: mongodb-operator

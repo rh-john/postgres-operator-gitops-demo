@@ -12,6 +12,8 @@ roleRef:
   kind: ClusterRole
   name: system:openshift:scc:anyuid
 subjects:
-  # namespace is set by kustomize to the overlay namespace (mongo-dev / mongo-test / mongo-prod)
+  # Operator runs in mongodb-operator namespace; this binding grants anyuid SCC
+  # in the target namespace so MongoDB pods can run correctly on OpenShift.
   - kind: ServiceAccount
     name: percona-server-mongodb-operator
+    namespace: mongodb-operator

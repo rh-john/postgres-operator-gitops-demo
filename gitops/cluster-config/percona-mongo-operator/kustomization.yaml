@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - subscription.yaml
+  - cluster-wide-rbac.yaml
 
 commonLabels:
   app.kubernetes.io/name: percona-server-mongodb-operator

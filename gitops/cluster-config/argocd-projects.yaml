@@ -402,11 +402,5 @@ spec:
       kind: PodDisruptionBudget
     - group: 'networking.k8s.io'
       kind: NetworkPolicy
-    # Operator-per-namespace: each mongo-* namespace manages its own OLM subscription
-    - group: 'operators.coreos.com'
-      kind: OperatorGroup
-    - group: 'operators.coreos.com'
-      kind: Subscription
-
   orphanedResources:
     warn: true
