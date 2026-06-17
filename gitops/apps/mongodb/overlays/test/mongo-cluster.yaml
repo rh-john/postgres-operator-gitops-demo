@@ -25,3 +25,4 @@ spec:
 
   backup:
     enabled: false
+    image: percona/percona-backup-mongodb:2.12.0
