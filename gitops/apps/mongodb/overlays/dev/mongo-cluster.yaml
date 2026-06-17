@@ -8,8 +8,8 @@ metadata:
     environment: dev
     managed-by: gitops
 spec:
-  crVersion: "1.17.0"
-  image: percona/percona-server-mongodb:7.0.8-5
+  crVersion: "1.22.0"
+  image: percona/percona-server-mongodb:7.0.30-16
 
   replsets:
     - name: rs0
