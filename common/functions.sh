@@ -23,7 +23,7 @@ INFO="${CYAN}[INFO]${NC}"
 DB_NAMESPACES="${DB_NAMESPACES:-dba-dev dba-test dba-prod}"
 OPERATOR_NAMESPACE="${OPERATOR_NAMESPACE:-postgres-operator}"
 ALL_NAMESPACES="$OPERATOR_NAMESPACE $DB_NAMESPACES"
-DBA_PASSWORD="${DBA_PASSWORD:-Redhat123p@ssword}"
+DBA_PASSWORD="${DBA_PASSWORD:-redhat123}"
 
 # ArgoCD application names managed by this project
 ARGOCD_INFRA_APPS="postgres-operator postgres-ui rbac-cluster"
@@ -363,6 +363,101 @@ remove_all_finalizers() {
                 --type merge -p '{"metadata":{"finalizers":[]}}' \
                 &>/dev/null || true
         done
+    fi
+}
+
+# ==============================================
+# USER CREATION FUNCTIONS
+# ==============================================
+
+# Create or update OpenShift HTPasswd users via the OAuth identity provider.
+# Requires cluster-admin. Creates/updates the htpass-secret in openshift-config
+# and ensures the HTPasswd OAuth provider is configured.
+#
+# Usage: create_openshift_users "user1 user2 ..." "password" ["provider-name"]
+create_openshift_users() {
+    local users=($1)
+    local password="$2"
+    local provider="${3:-htpasswd-provider}"
+    local secret_name="htpass-secret"
+    local secret_namespace="openshift-config"
+    local tmp_htpasswd
+    tmp_htpasswd=$(mktemp)
+
+    if ! command -v htpasswd &>/dev/null; then
+        die "'htpasswd' command not found. Install httpd-tools (RHEL/Fedora) or apache2-utils (Debian/Ubuntu) and retry."
+    fi
+
+    echo "Creating OpenShift users: ${users[*]}"
+
+    # Seed tmp file with any existing entries so we don't clobber other users
+    if oc get secret "$secret_name" -n "$secret_namespace" &>/dev/null; then
+        oc get secret "$secret_name" -n "$secret_namespace" \
+            -o jsonpath='{.data.htpasswd}' | base64 -d > "$tmp_htpasswd" 2>/dev/null || true
+    fi
+
+    # Add / update each user
+    for user in "${users[@]}"; do
+        htpasswd -b "$tmp_htpasswd" "$user" "$password"
+        echo "  → user '$user' added/updated"
+    done
+
+    # Create or replace the htpasswd secret
+    if oc get secret "$secret_name" -n "$secret_namespace" &>/dev/null; then
+        oc create secret generic "$secret_name" \
+            --from-file=htpasswd="$tmp_htpasswd" \
+            --dry-run=client -o yaml \
+            | oc replace -f -
+    else
+        oc create secret generic "$secret_name" \
+            --from-file=htpasswd="$tmp_htpasswd" \
+            -n "$secret_namespace"
+    fi
+
+    rm -f "$tmp_htpasswd"
+
+    # Ensure the HTPasswd identity provider is registered in the OAuth CR
+    local existing_type
+    existing_type=$(oc get oauth cluster -o json 2>/dev/null \
+        | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+idps = data.get('spec', {}).get('identityProviders', [])
+for idp in idps:
+    if idp.get('type') == 'HTPasswd' and idp.get('htpasswd', {}).get('fileData', {}).get('name') == '$secret_name':
+        print('exists')
+        break
+" 2>/dev/null || true)
+
+    if [ "$existing_type" != "exists" ]; then
+        echo "  → Registering HTPasswd provider '$provider' in OAuth cluster config..."
+        oc patch oauth cluster --type=json -p "[{
+            \"op\": \"add\",
+            \"path\": \"/spec/identityProviders/-\",
+            \"value\": {
+                \"name\": \"$provider\",
+                \"mappingMethod\": \"claim\",
+                \"type\": \"HTPasswd\",
+                \"htpasswd\": {
+                    \"fileData\": { \"name\": \"$secret_name\" }
+                }
+            }
+        }]" 2>/dev/null || \
+        oc patch oauth cluster --type=merge -p "{
+            \"spec\": {
+                \"identityProviders\": [{
+                    \"name\": \"$provider\",
+                    \"mappingMethod\": \"claim\",
+                    \"type\": \"HTPasswd\",
+                    \"htpasswd\": {
+                        \"fileData\": { \"name\": \"$secret_name\" }
+                    }
+                }]
+            }
+        }"
+        echo "  → OAuth provider configured. Authentication pods will restart — allow ~60s."
+    else
+        echo "  → HTPasswd provider already configured."
     fi
 }
 

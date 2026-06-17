@@ -7,6 +7,10 @@ source "${SCRIPT_DIR}/functions.sh"
 
 banner "Setting up ALL DBA RBAC"
 
+# Create OpenShift users before applying RBAC so they exist in the cluster
+create_openshift_users "dba dba-dev dba-test dba-prod" "$DBA_PASSWORD"
+echo ""
+
 # Apply cluster-level RBAC manifests
 # Note: Cross-namespace read access RoleBindings (dba-users-group.yaml) are
 # configured per namespace in helm/overlays/{env}/ (applied via oc apply -k)
