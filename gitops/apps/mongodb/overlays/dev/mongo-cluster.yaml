@@ -16,7 +16,7 @@ spec:
       size: 1   # Single node for dev – no HA overhead
 
       volumeSpec:
-        pvc:
+        persistentVolumeClaim:
           accessModes:
             - ReadWriteOnce
           resources:

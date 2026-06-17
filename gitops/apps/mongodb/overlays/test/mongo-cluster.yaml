@@ -16,7 +16,7 @@ spec:
       size: 3
 
       volumeSpec:
-        pvc:
+        persistentVolumeClaim:
           accessModes:
             - ReadWriteOnce
           resources:
