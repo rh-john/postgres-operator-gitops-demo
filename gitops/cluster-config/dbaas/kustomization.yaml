@@ -20,10 +20,10 @@ resources:
   - dbaas-rbac-app.yaml
 
   # Database instance applications (deployed by DBA users or uncomment to auto-deploy)
-  # - team-pg-dev-app.yaml
+  - team-pg-dev-app.yaml
   # - team-pg-test-app.yaml
   # - team-pg-prod-app.yaml
-  # - team-mongo-dev-app.yaml
+  - team-mongo-dev-app.yaml
   # - team-mongo-test-app.yaml
   # - team-mongo-prod-app.yaml
 
