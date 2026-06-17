@@ -16,7 +16,7 @@ spec:
   
   # Source - dev team's cluster definitions
   source:
-    repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
+    repoURL: https://github.com/john-johansson/postgres-operator-gitops-demo
     targetRevision: main
     path: gitops/apps/databases/overlays/dev
   

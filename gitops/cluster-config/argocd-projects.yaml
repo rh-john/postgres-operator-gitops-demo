@@ -9,7 +9,7 @@ spec:
   description: Cluster-wide infrastructure (operators, RBAC, monitoring)
 
   sourceRepos:
-    - https://github.com/rh-john/postgres-operator-gitops-demo
+    - https://github.com/john-johansson/postgres-operator-gitops-demo
     # If using Forgejo, add your Forgejo repo URL here instead / in addition
 
   destinations:
@@ -64,7 +64,7 @@ spec:
   description: PostgreSQL clusters (Crunchy PGO) for dev/test/prod
 
   sourceRepos:
-    - https://github.com/rh-john/postgres-operator-gitops-demo
+    - https://github.com/john-johansson/postgres-operator-gitops-demo
 
   destinations:
     - namespace: 'pg-*'
@@ -114,7 +114,7 @@ spec:
   description: MongoDB clusters (Percona Operator) for dev/test/prod
 
   sourceRepos:
-    - https://github.com/rh-john/postgres-operator-gitops-demo
+    - https://github.com/john-johansson/postgres-operator-gitops-demo
 
   destinations:
     - namespace: 'mongo-*'

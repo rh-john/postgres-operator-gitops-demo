@@ -14,7 +14,7 @@ spec:
   project: team-postgres
 
   source:
-    repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
+    repoURL: https://github.com/john-johansson/postgres-operator-gitops-demo
     targetRevision: feature/dbaas-operators
     path: gitops/apps/postgres/overlays/dev
 

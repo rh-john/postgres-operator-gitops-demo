@@ -24,7 +24,7 @@ spec:
           - $values/gitops/cluster-config/postgres-operator/helm-values.yaml
     
     # Our custom values from git repo
-    - repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
+    - repoURL: https://github.com/john-johansson/postgres-operator-gitops-demo
       targetRevision: main
       ref: values
   

@@ -14,8 +14,8 @@ spec:
   
   # Source - uses Kustomize to manage all cluster-config applications
   source:
-    repoURL: https://github.com/rh-john/postgres-operator-gitops-demo
-    targetRevision: main
+    repoURL: https://github.com/john-johansson/postgres-operator-gitops-demo
+    targetRevision: feature/dbaas-operators
     path: gitops/cluster-config
   
   # Destination
