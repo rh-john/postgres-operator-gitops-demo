@@ -22,6 +22,13 @@ oc apply -f helm/rbac/master-dba-ui-access.yaml        # UI port-forward access
 oc apply -f helm/rbac/secops.yaml
 
 echo ""
+echo "Creating OpenShift User objects (required before first login)..."
+for user in dba dba-dev dba-test dba-prod secops; do
+    oc create user "$user" --dry-run=client -o yaml | oc apply -f - &>/dev/null
+    echo "  → user object '$user' ensured"
+done
+
+echo ""
 echo "Ensuring users are properly registered in dba-users group..."
 oc adm groups add-users dba-users dba dba-dev dba-test dba-prod 2>/dev/null || true
 

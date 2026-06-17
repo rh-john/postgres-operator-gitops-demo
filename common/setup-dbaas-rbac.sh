@@ -26,6 +26,14 @@ oc apply -f gitops/cluster-config/dbaas-rbac/postgres-user-role-crunchy.yaml
 oc apply -f gitops/cluster-config/dbaas-rbac/mongo-user-role.yaml
 
 echo ""
+echo "Creating OpenShift User objects (required before first login)..."
+ALL_USERS="pg-dba pg-dba-dev pg-dba-test pg-dba-prod mongo-dba mongo-dba-dev mongo-dba-test mongo-dba-prod secops"
+for user in $ALL_USERS; do
+    oc create user "$user" --dry-run=client -o yaml | oc apply -f - &>/dev/null
+    echo "  → user object '$user' ensured"
+done
+
+echo ""
 echo "Registering users in groups..."
 oc adm groups new pg-dba-users    2>/dev/null || true
 oc adm groups new mongo-dba-users 2>/dev/null || true
