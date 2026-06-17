@@ -11,6 +11,7 @@ spec:
   # Source repositories
   sourceRepos:
     - https://github.com/rh-john/postgres-operator-gitops-demo
+    - https://github.com/john-johansson/postgres-operator-gitops-demo
     - https://opensource.zalando.com/postgres-operator/charts/postgres-operator
     - https://opensource.zalando.com/postgres-operator/charts/postgres-operator-ui
   
@@ -64,6 +65,7 @@ spec:
   # Source repositories
   sourceRepos:
     - https://github.com/rh-john/postgres-operator-gitops-demo
+    - https://github.com/john-johansson/postgres-operator-gitops-demo
   
   # Allowed destinations - only dba-* namespaces
   destinations:
@@ -122,6 +124,7 @@ spec:
   
   sourceRepos:
     - https://github.com/rh-john/postgres-operator-gitops-demo
+    - https://github.com/john-johansson/postgres-operator-gitops-demo
   
   # Dev namespace only
   destinations:
@@ -185,6 +188,7 @@ spec:
   
   sourceRepos:
     - https://github.com/rh-john/postgres-operator-gitops-demo
+    - https://github.com/john-johansson/postgres-operator-gitops-demo
   
   destinations:
     - namespace: dba-test
@@ -247,6 +251,7 @@ spec:
   
   sourceRepos:
     - https://github.com/rh-john/postgres-operator-gitops-demo
+    - https://github.com/john-johansson/postgres-operator-gitops-demo
   
   destinations:
     - namespace: dba-prod
@@ -310,7 +315,6 @@ spec:
   description: PostgreSQL clusters (Crunchy PGO) – pg-dev / pg-test / pg-prod
 
   sourceRepos:
-    - https://github.com/john-johansson/postgres-operator-gitops-demo
 
   destinations:
     - namespace: 'pg-*'
@@ -362,7 +366,6 @@ spec:
   description: MongoDB clusters (Percona Operator) – mongo-dev / mongo-test / mongo-prod
 
   sourceRepos:
-    - https://github.com/john-johansson/postgres-operator-gitops-demo
 
   destinations:
     - namespace: 'mongo-*'
