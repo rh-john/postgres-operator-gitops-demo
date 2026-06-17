@@ -50,20 +50,37 @@ else
     MISSING+=("login")
 fi
 
+# Detect which demo is active based on deployed namespaces
+DEMO_MODE="zalando"
+if oc get namespace pg-dev &>/dev/null 2>&1 || oc get namespace mongo-dev &>/dev/null 2>&1; then
+    DEMO_MODE="dbaas"
+fi
+
 # Check OpenShift users (if logged in)
 echo ""
-echo "OpenShift Users:"
 if oc whoami &>/dev/null && oc auth can-i list users &>/dev/null; then
-    REQUIRED_USERS=("dba" "dba-dev" "dba-test" "dba-prod" "secops")
+    if [ "$DEMO_MODE" = "dbaas" ]; then
+        echo "OpenShift Users (DBaaS demo – pg-dba-* / mongo-dba-*):"
+        REQUIRED_USERS=("pg-dba" "pg-dba-dev" "pg-dba-test" "pg-dba-prod"
+                        "mongo-dba" "mongo-dba-dev" "mongo-dba-test" "mongo-dba-prod"
+                        "secops")
+        SETUP_HINT="./common/setup-dbaas-rbac.sh"
+    else
+        echo "OpenShift Users (Zalando demo – dba/dba-dev/dba-test/dba-prod):"
+        REQUIRED_USERS=("dba" "dba-dev" "dba-test" "dba-prod" "secops")
+        SETUP_HINT="./common/setup-dba-rbac.sh"
+    fi
+
     for user in "${REQUIRED_USERS[@]}"; do
         if oc get user "$user" &>/dev/null; then
             echo "  ✓ $user"
         else
-            echo "  ✗ $user (missing)"
+            echo "  ✗ $user (missing) → run: $SETUP_HINT"
             MISSING+=("user:$user")
         fi
     done
 else
+    echo "OpenShift Users:"
     echo "  ⚠ Cannot check users (not logged in or insufficient privileges)"
 fi
 
@@ -71,26 +88,36 @@ fi
 echo ""
 echo "OpenShift Groups:"
 if oc whoami &>/dev/null && oc auth can-i list groups &>/dev/null; then
-    if oc get group dba-users &>/dev/null; then
-        GROUP_MEMBERS=$(oc get group dba-users -o jsonpath='{.users[*]}' 2>/dev/null)
-        echo "  ✓ dba-users exists"
-        echo "    Members: $GROUP_MEMBERS"
-        
-        # Verify expected members
-        EXPECTED_MEMBERS=("dba" "dba-dev" "dba-test" "dba-prod")
-        for member in "${EXPECTED_MEMBERS[@]}"; do
-            if echo "$GROUP_MEMBERS" | grep -q "$member"; then
-                echo "    ✓ $member in group"
+    if [ "$DEMO_MODE" = "dbaas" ]; then
+        GROUPS_TO_CHECK=("pg-dba-users" "mongo-dba-users")
+        EXPECTED_MEMBERS_pg=("pg-dba" "pg-dba-dev" "pg-dba-test" "pg-dba-prod")
+        EXPECTED_MEMBERS_mongo=("mongo-dba" "mongo-dba-dev" "mongo-dba-test" "mongo-dba-prod")
+        for grp in "${GROUPS_TO_CHECK[@]}"; do
+            if oc get group "$grp" &>/dev/null; then
+                MEMBERS=$(oc get group "$grp" -o jsonpath='{.users[*]}' 2>/dev/null)
+                echo "  ✓ $grp (members: $MEMBERS)"
             else
-                echo "    ✗ $member NOT in group"
-                WARNINGS+=("group-member:$member")
+                echo "  ✗ $grp not found → run: ./common/setup-dbaas-rbac.sh"
+                WARNINGS+=("group:$grp")
             fi
         done
     else
-        echo "  ✗ dba-users group not found"
-        echo "    Run: oc adm groups new dba-users"
-        echo "    Then: oc adm groups add-users dba-users dba dba-dev dba-test dba-prod"
-        WARNINGS+=("group:dba-users")
+        if oc get group dba-users &>/dev/null; then
+            GROUP_MEMBERS=$(oc get group dba-users -o jsonpath='{.users[*]}' 2>/dev/null)
+            echo "  ✓ dba-users exists"
+            echo "    Members: $GROUP_MEMBERS"
+            for member in "dba" "dba-dev" "dba-test" "dba-prod"; do
+                if echo "$GROUP_MEMBERS" | grep -q "$member"; then
+                    echo "    ✓ $member in group"
+                else
+                    echo "    ✗ $member NOT in group"
+                    WARNINGS+=("group-member:$member")
+                fi
+            done
+        else
+            echo "  ✗ dba-users group not found → run: ./common/setup-dba-rbac.sh"
+            WARNINGS+=("group:dba-users")
+        fi
     fi
 else
     echo "  ⚠ Cannot check groups (not logged in or insufficient privileges)"
